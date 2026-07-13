@@ -28,8 +28,8 @@ function closeMenu(e: React.MouseEvent<HTMLElement>) {
 export function Header() {
   const pathname = usePathname();
 
-  // Mobile only: hide the sticky header when scrolling down, reveal it the
-  // moment the user scrolls back up (desktop keeps it in normal flow).
+  // Hide the sticky header when scrolling down, reveal it the moment the
+  // user scrolls back up (applies on all screen sizes).
   const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
@@ -68,7 +68,7 @@ export function Header() {
   return (
     <header
       className={cn(
-        "sticky top-0 z-50 border-b border-line transition-transform duration-300 lg:relative lg:translate-y-0",
+        "sticky top-0 z-50 border-b border-line transition-transform duration-300",
         hidden && "-translate-y-full",
       )}
     >
