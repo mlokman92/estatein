@@ -56,9 +56,9 @@ const socials = [
   },
 ];
 
-const copyright = "©2023 Estatein. All Rights Reserved.";
-
 export function Footer() {
+  const copyright = `©${new Date().getFullYear()} Estatein. All Rights Reserved.`;
+
   return (
     <footer className="border-t border-line bg-bg">
       <Container className="py-16 lg:py-20">
