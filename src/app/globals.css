@@ -1,0 +1,106 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------ */
+/*  Estatein design tokens (from Figma: Real Estate Business Website  */
+/*  UI Template — Dark Theme). Tailwind v4 @theme generates utilities  */
+/*  e.g. bg-surface, text-muted, border-line, text-purple, rounded-card */
+/* ------------------------------------------------------------------ */
+@theme {
+  --color-bg: #141414; /* Grey/08 — page background */
+  --color-surface: #1a1a1a; /* Grey/10 — cards, nav, buttons */
+  --color-elevated: #262626; /* Grey/15 — inner shapes / hover */
+  --color-line: #262626; /* Grey/15 — default borders */
+  --color-line-strong: #333333; /* Grey/20 — stronger borders */
+
+  --color-purple: #703bf7; /* Purple/60 — primary accent */
+  --color-purple-light: #a685fa; /* Purple/75 */
+
+  --color-muted: #999999; /* Grey/60 — primary muted text */
+  --color-muted-2: #808080; /* Grey/50 */
+  --color-grey-40: #666666; /* Grey/40 */
+  --color-grey-30: #4d4d4d; /* Grey/30 */
+
+  --font-sans: var(--font-urbanist), ui-sans-serif, system-ui, -apple-system,
+    sans-serif;
+
+  --radius-btn: 10px;
+  --radius-card: 12px;
+
+  /* The full 1920 desktop type/spacing scale only kicks in on very large
+     monitors; laptops (1024–1919px) use the lighter `lg` scale so the design
+     doesn't render oversized. */
+  --breakpoint-3xl: 120rem; /* 1920px */
+
+  --animate-spin-slow: spin-slow 20s linear infinite;
+}
+
+@keyframes spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Base                                                               */
+/* ------------------------------------------------------------------ */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: #ffffff;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: var(--color-purple);
+    color: #ffffff;
+  }
+
+  /* thin dark scrollbar to match the theme */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-line-strong) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  *::-webkit-scrollbar-thumb {
+    background-color: var(--color-line-strong);
+    border-radius: 9999px;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Utilities                                                          */
+/* ------------------------------------------------------------------ */
+
+/* Faint square grid used behind the hero / CTA / footer artwork */
+@utility bg-grid {
+  background-image: linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0.045) 1px,
+      transparent 1px
+    ),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+/* Purple radial glow used behind hero / cta artwork */
+@utility glow-purple {
+  background: radial-gradient(
+    60% 60% at 70% 30%,
+    rgba(112, 59, 247, 0.28) 0%,
+    rgba(112, 59, 247, 0) 70%
+  );
+}
+
+/* Subtle top border-gradient divider seen between some sections */
+@utility divider-line {
+  border-top: 1px solid var(--color-line);
+}
