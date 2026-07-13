@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
@@ -27,13 +28,50 @@ function closeMenu(e: React.MouseEvent<HTMLElement>) {
 export function Header() {
   const pathname = usePathname();
 
+  // Mobile only: hide the sticky header when scrolling down, reveal it the
+  // moment the user scrolls back up (desktop keeps it in normal flow).
+  const [hidden, setHidden] = useState(false);
+
+  useEffect(() => {
+    let lastY = window.scrollY;
+    let ticking = false;
+
+    const update = () => {
+      const y = window.scrollY;
+      // Only start hiding once past the header's own height, and require a
+      // small delta so tiny jitters don't toggle it.
+      if (y > lastY + 4 && y > 120) {
+        setHidden(true);
+      } else if (y < lastY - 4) {
+        setHidden(false);
+      }
+      lastY = y;
+      ticking = false;
+    };
+
+    const onScroll = () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   // A link is "current" only for real routes (not the "#" placeholders).
   const isActive = (href: string) =>
     href !== "#" &&
     (href === "/" ? pathname === "/" : pathname.startsWith(href));
 
   return (
-    <header className="relative z-50 border-b border-line">
+    <header
+      className={cn(
+        "sticky top-0 z-50 border-b border-line transition-transform duration-300 lg:relative lg:translate-y-0",
+        hidden && "-translate-y-full",
+      )}
+    >
       {/* Top announcement banner — dismissible via a checkbox + label (pure
           CSS) so the close button works even if React never hydrates. */}
       <input
