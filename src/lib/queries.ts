@@ -29,15 +29,100 @@ export type PricingItem = { label: string; value: string; note?: string };
 
 // ---- Properties ------------------------------------------------------------
 
-export const getProperties = cache(async (): Promise<Property[]> => {
-  const { data } = await supabase
-    .from("properties")
-    .select("*")
-    .eq("is_published", true)
-    .order("sort_order", { ascending: true })
-    .order("created_at", { ascending: true });
-  return data ?? [];
-});
+/** Columns searched by the free-text query on the /properties page. */
+const PROPERTY_SEARCH_COLUMNS = [
+  "title",
+  "location",
+  "property_type",
+  "tagline",
+  "card_description",
+  "full_description",
+] as const;
+
+/**
+ * Filters for the /properties listing. `price`/`size` are `"min-max"` strings
+ * where either bound may be empty (e.g. `"2000000-"` = open top end, `"-500000"`
+ * = open bottom end); they map to the numeric `price` / `area` columns.
+ */
+export type PropertyFilters = {
+  query?: string;
+  location?: string;
+  type?: string;
+  price?: string;
+  size?: string;
+};
+
+const toNumber = (s: string): number | null =>
+  s !== "" && Number.isFinite(Number(s)) ? Number(s) : null;
+
+/** Parse a `"min-max"` range string into `[min, max]` numbers (null = unbounded). */
+const parseRange = (value?: string): [number | null, number | null] => {
+  if (!value) return [null, null];
+  const [min = "", max = ""] = value.split("-");
+  return [toNumber(min), toNumber(max)];
+};
+
+export const getProperties = cache(
+  async (filters: PropertyFilters = {}): Promise<Property[]> => {
+    let builder = supabase
+      .from("properties")
+      .select("*")
+      .eq("is_published", true);
+
+    // Strip PostgREST-significant characters (commas/parens/wildcards) so a
+    // term like "3-bed, villa (miami)" can't break the `.or()` filter grammar.
+    const term = filters.query
+      ?.trim()
+      .replace(/[%,()\\]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (term) {
+      const pattern = `%${term}%`;
+      builder = builder.or(
+        PROPERTY_SEARCH_COLUMNS.map((col) => `${col}.ilike.${pattern}`).join(
+          ",",
+        ),
+      );
+    }
+
+    if (filters.location) builder = builder.eq("location", filters.location);
+    if (filters.type) builder = builder.eq("property_type", filters.type);
+
+    const [priceMin, priceMax] = parseRange(filters.price);
+    if (priceMin != null) builder = builder.gte("price", priceMin);
+    if (priceMax != null) builder = builder.lte("price", priceMax);
+
+    const [sizeMin, sizeMax] = parseRange(filters.size);
+    if (sizeMin != null) builder = builder.gte("area", sizeMin);
+    if (sizeMax != null) builder = builder.lte("area", sizeMax);
+
+    const { data } = await builder
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true });
+    return data ?? [];
+  },
+);
+
+export type PropertyFilterOptions = { locations: string[]; types: string[] };
+
+/** Distinct published `location` + `property_type` values for the filter menus. */
+export const getPropertyFilterOptions = cache(
+  async (): Promise<PropertyFilterOptions> => {
+    const { data } = await supabase
+      .from("properties")
+      .select("location, property_type")
+      .eq("is_published", true);
+    const rows = data ?? [];
+    const distinct = (values: (string | null)[]): string[] =>
+      Array.from(
+        new Set(values.filter((v): v is string => !!v && v.trim() !== "")),
+      ).sort((a, b) => a.localeCompare(b));
+    return {
+      locations: distinct(rows.map((r) => r.location)),
+      types: distinct(rows.map((r) => r.property_type)),
+    };
+  },
+);
 
 export const getPropertySlugs = cache(async (): Promise<string[]> => {
   const { data } = await supabase
