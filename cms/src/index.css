@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+/* Light theme tokens for the CMS admin. `fg` is the primary text color;
+   `text-white` is kept only on colored fills (buttons, logos, badges). */
+@theme {
+  --color-bg: #f5f6f8;
+  --color-surface: #ffffff;
+  --color-elevated: #eef0f3;
+  --color-line: #e4e6ea;
+  --color-line-strong: #d2d5dc;
+  --color-fg: #18181b;
+  --color-muted: #6b7280;
+  --color-purple: #703bf7;
+  --color-purple-light: #5b28d9;
+  --radius-btn: 0.625rem;
+  --radius-card: 0.875rem;
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-fg);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+}
