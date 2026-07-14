@@ -1,31 +1,99 @@
 "use client";
 
+import { useState } from "react";
+import type { FormEvent } from "react";
 import { Phone, Mail } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import {
-  FakeSelect,
-  fieldInputCls,
-  fieldLabelCls,
-  slug,
-} from "@/components/ui/form";
+import { fieldInputCls, fieldLabelCls } from "@/components/ui/form";
+import { submitGeneralInquiry } from "@/app/actions";
 
 const textFields = [
-  { label: "First Name", placeholder: "Enter First Name", type: "text", autoComplete: "given-name" },
-  { label: "Last Name", placeholder: "Enter Last Name", type: "text", autoComplete: "family-name" },
-  { label: "Email", placeholder: "Enter your Email", type: "email", autoComplete: "email" },
-  { label: "Phone", placeholder: "Enter Phone Number", type: "tel", autoComplete: "tel" },
+  { key: "first_name", label: "First Name", placeholder: "Enter First Name", type: "text", autoComplete: "given-name", required: true },
+  { key: "last_name", label: "Last Name", placeholder: "Enter Last Name", type: "text", autoComplete: "family-name", required: false },
+  { key: "email", label: "Email", placeholder: "Enter your Email", type: "email", autoComplete: "email", required: true },
+  { key: "phone", label: "Phone", placeholder: "Enter Phone Number", type: "tel", autoComplete: "tel", required: false },
 ] as const;
 
 const selectFields = [
-  { label: "Preferred Location", placeholder: "Select Location" },
-  { label: "Property Type", placeholder: "Select Property Type" },
-  { label: "No. of Bathrooms", placeholder: "Select no. of Bathrooms" },
-  { label: "No. of Bedrooms", placeholder: "Select no. of Bedrooms" },
+  {
+    key: "preferred_location",
+    label: "Preferred Location",
+    placeholder: "Select Location",
+    options: ["No Preference", "New York", "Los Angeles", "Miami", "Chicago", "San Francisco"],
+  },
+  {
+    key: "property_type",
+    label: "Property Type",
+    placeholder: "Select Property Type",
+    options: ["Villa", "Apartment", "Cottage", "Townhouse", "Penthouse", "House", "Studio"],
+  },
+  {
+    key: "bathrooms",
+    label: "No. of Bathrooms",
+    placeholder: "Select no. of Bathrooms",
+    options: ["1", "2", "3", "4", "5+"],
+  },
+  {
+    key: "bedrooms",
+    label: "No. of Bedrooms",
+    placeholder: "Select no. of Bedrooms",
+    options: ["1", "2", "3", "4", "5+"],
+  },
 ] as const;
 
+const budgetOptions = [
+  "Under $250k",
+  "$250k – $500k",
+  "$500k – $1M",
+  "$1M – $2M",
+  "$2M+",
+];
+
+const BLANK = {
+  first_name: "",
+  last_name: "",
+  email: "",
+  phone: "",
+  preferred_location: "",
+  property_type: "",
+  bathrooms: "",
+  bedrooms: "",
+  budget: "",
+  contact_number: "",
+  contact_email: "",
+  message: "",
+};
+
 export function InquiryForm() {
+  const [form, setForm] = useState(BLANK);
+  const [method, setMethod] = useState<"phone" | "email">("phone");
+  const [agreed, setAgreed] = useState(false);
+  const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">(
+    "idle",
+  );
+
+  const set = (key: keyof typeof BLANK, value: string) =>
+    setForm((prev) => ({ ...prev, [key]: value }));
+
+  async function onSubmit(e: FormEvent) {
+    e.preventDefault();
+    setStatus("loading");
+    const res = await submitGeneralInquiry({
+      ...form,
+      preferred_contact_method: method,
+      agree_to_terms: agreed,
+    });
+    if (res.ok) {
+      setStatus("done");
+      setForm(BLANK);
+      setAgreed(false);
+    } else {
+      setStatus("error");
+    }
+  }
+
   return (
     <section className="border-t border-line py-16 lg:py-20 3xl:py-28">
       <Container>
@@ -35,22 +103,25 @@ export function InquiryForm() {
         />
 
         <form
-          onSubmit={(e) => e.preventDefault()}
+          onSubmit={onSubmit}
           className="mt-12 rounded-2xl border border-line bg-surface p-6 sm:p-8 lg:p-10 3xl:p-12"
         >
           {/* Row 1 — contact text fields */}
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {textFields.map((field) => (
-              <div key={field.label}>
-                <label className={fieldLabelCls} htmlFor={slug(field.label)}>
+              <div key={field.key}>
+                <label className={fieldLabelCls} htmlFor={field.key}>
                   {field.label}
                 </label>
                 <input
-                  id={slug(field.label)}
+                  id={field.key}
                   type={field.type}
                   autoComplete={field.autoComplete}
                   placeholder={field.placeholder}
                   className={fieldInputCls}
+                  required={field.required}
+                  value={form[field.key]}
+                  onChange={(e) => set(field.key, e.target.value)}
                 />
               </div>
             ))}
@@ -59,9 +130,25 @@ export function InquiryForm() {
           {/* Row 2 — preference selects */}
           <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {selectFields.map((field) => (
-              <div key={field.label}>
-                <span className={fieldLabelCls}>{field.label}</span>
-                <FakeSelect label={field.label} placeholder={field.placeholder} />
+              <div key={field.key}>
+                <label className={fieldLabelCls} htmlFor={field.key}>
+                  {field.label}
+                </label>
+                <select
+                  id={field.key}
+                  className={`${fieldInputCls} appearance-none`}
+                  value={form[field.key]}
+                  onChange={(e) => set(field.key, e.target.value)}
+                >
+                  <option value="" disabled>
+                    {field.placeholder}
+                  </option>
+                  {field.options.map((o) => (
+                    <option key={o} value={o}>
+                      {o}
+                    </option>
+                  ))}
+                </select>
               </div>
             ))}
           </div>
@@ -69,8 +156,24 @@ export function InquiryForm() {
           {/* Row 3 — budget + preferred contact method */}
           <div className="mt-6 grid gap-6 lg:grid-cols-2">
             <div>
-              <span className={fieldLabelCls}>Budget</span>
-              <FakeSelect label="Budget" placeholder="Select Budget" />
+              <label className={fieldLabelCls} htmlFor="budget">
+                Budget
+              </label>
+              <select
+                id="budget"
+                className={`${fieldInputCls} appearance-none`}
+                value={form.budget}
+                onChange={(e) => set("budget", e.target.value)}
+              >
+                <option value="" disabled>
+                  Select Budget
+                </option>
+                {budgetOptions.map((o) => (
+                  <option key={o} value={o}>
+                    {o}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
               <span className={fieldLabelCls}>Preferred Contact Method</span>
@@ -86,11 +189,14 @@ export function InquiryForm() {
                     aria-label="Enter your number"
                     placeholder="Enter Your Number"
                     className="min-w-0 flex-1 bg-transparent text-base text-white placeholder-muted outline-none"
+                    value={form.contact_number}
+                    onChange={(e) => set("contact_number", e.target.value)}
                   />
                   <input
                     type="radio"
                     name="contact-method"
-                    defaultChecked
+                    checked={method === "phone"}
+                    onChange={() => setMethod("phone")}
                     aria-label="Contact by phone"
                     className="size-4 shrink-0 accent-purple"
                   />
@@ -102,10 +208,14 @@ export function InquiryForm() {
                     aria-label="Enter your email"
                     placeholder="Enter Your Email"
                     className="min-w-0 flex-1 bg-transparent text-base text-white placeholder-muted outline-none"
+                    value={form.contact_email}
+                    onChange={(e) => set("contact_email", e.target.value)}
                   />
                   <input
                     type="radio"
                     name="contact-method"
+                    checked={method === "email"}
+                    onChange={() => setMethod("email")}
                     aria-label="Contact by email"
                     className="size-4 shrink-0 accent-purple"
                   />
@@ -124,6 +234,8 @@ export function InquiryForm() {
               rows={4}
               placeholder="Enter your Message here.."
               className={`${fieldInputCls} resize-y`}
+              value={form.message}
+              onChange={(e) => set("message", e.target.value)}
             />
           </div>
 
@@ -133,6 +245,9 @@ export function InquiryForm() {
               <input
                 type="checkbox"
                 className="size-5 shrink-0 accent-purple"
+                checked={agreed}
+                onChange={(e) => setAgreed(e.target.checked)}
+                required
               />
               <span>
                 I agree with{" "}
@@ -145,10 +260,21 @@ export function InquiryForm() {
                 </a>
               </span>
             </label>
-            <Button variant="primary" size="md" type="submit" className="shrink-0">
+            <Button variant="primary" size="md" type="submit" className="shrink-0" disabled={status === "loading"}>
               Send Your Message
             </Button>
           </div>
+
+          {status === "done" && (
+            <p className="mt-4 text-base text-purple-light">
+              Thanks — our team will be in touch shortly.
+            </p>
+          )}
+          {status === "error" && (
+            <p className="mt-4 text-base text-red-400">
+              Something went wrong. Please try again.
+            </p>
+          )}
         </form>
       </Container>
     </section>

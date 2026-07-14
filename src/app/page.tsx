@@ -7,6 +7,8 @@ import { FAQ } from "@/components/home/FAQ";
 import { CTA } from "@/components/layout/CTA";
 import { Footer } from "@/components/layout/Footer";
 
+export const revalidate = 60;
+
 export default function Home() {
   return (
     <>

@@ -1,17 +1,28 @@
 import Image from "next/image";
 import { Container } from "@/components/ui/Container";
 import { cn } from "@/lib/cn";
+import { getSiteContent } from "@/lib/queries";
+import type { AboutHero as AboutHeroContent } from "@/lib/content";
 
-const stats = [
+const fallbackStats = [
   { value: "200+", label: "Happy Customers" },
   { value: "10k+", label: "Properties For Clients" },
   { value: "16+", label: "Years of Experience" },
-] as const;
+];
 
-const paragraph =
+const fallbackParagraph =
   "Our story is one of continuous growth and evolution. We started as a small team with big dreams, determined to create a real estate platform that transcended the ordinary. Over the years, we've expanded our reach, forged valuable partnerships, and gained the trust of countless clients.";
 
-export function AboutHero() {
+export async function AboutHero() {
+  const content = await getSiteContent<AboutHeroContent>("about.hero");
+  const heading = content?.heading ?? "Our Journey";
+  const paragraph = content?.paragraph ?? fallbackParagraph;
+  const image = content?.image ?? "/images/about-journey.png";
+  const imageAlt =
+    content?.imageAlt ??
+    "A hand holding a scale model of a modern two-storey house";
+  const stats = content?.stats ?? fallbackStats;
+
   return (
     <section className="relative overflow-hidden">
       {/* Faint grid + purple glow behind the whole hero */}
@@ -30,7 +41,7 @@ export function AboutHero() {
           <div className="flex w-full flex-col gap-10 lg:w-[55%] 3xl:gap-[60px]">
             <div className="flex flex-col gap-6">
               <h1 className="text-[40px] font-semibold leading-[1.15] text-white sm:text-[44px] lg:text-5xl 3xl:text-6xl">
-                Our Journey
+                {heading}
               </h1>
               <p className="max-w-xl text-base leading-[1.6] text-muted 3xl:text-lg">
                 {paragraph}
@@ -69,14 +80,16 @@ export function AboutHero() {
                 aria-hidden
                 className="glow-purple pointer-events-none absolute -right-10 top-0 h-full w-2/3 opacity-70"
               />
-              <Image
-                src="/images/about-journey.png"
-                alt="A hand holding a scale model of a modern two-storey house"
-                fill
-                priority
-                sizes="(max-width: 1024px) 100vw, 45vw"
-                className="object-cover object-bottom"
-              />
+              {image && (
+                <Image
+                  src={image}
+                  alt={imageAlt}
+                  fill
+                  priority
+                  sizes="(max-width: 1024px) 100vw, 45vw"
+                  className="object-cover object-bottom"
+                />
+              )}
             </div>
           </div>
         </div>

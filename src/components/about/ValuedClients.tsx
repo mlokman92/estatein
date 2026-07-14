@@ -3,47 +3,34 @@ import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { SliderControls } from "@/components/ui/SliderControls";
+import { getValuedClients, getSiteContent } from "@/lib/queries";
+import type { AboutSectionHeadings } from "@/lib/content";
 
-type Client = {
-  since: string;
-  company: string;
-  domain: string;
-  category: string;
-  quote: string;
-};
+export async function ValuedClients() {
+  const [clients, headings] = await Promise.all([
+    getValuedClients(),
+    getSiteContent<AboutSectionHeadings>("about.section_headings"),
+  ]);
 
-const clients: Client[] = [
-  {
-    since: "2019",
-    company: "ABC Corporation",
-    domain: "Commercial Real Estate",
-    category: "Luxury Home Development",
-    quote:
-      "Estatein's expertise in finding the perfect office space for our expanding operations was invaluable. They truly understand our business needs.",
-  },
-  {
-    since: "2018",
-    company: "GreenTech Enterprises",
-    domain: "Commercial Real Estate",
-    category: "Retail Space",
-    quote:
-      "Estatein's ability to identify prime retail locations helped us expand our brand presence. They are a trusted partner in our growth.",
-  },
-];
+  if (clients.length === 0) return null;
 
-export function ValuedClients() {
+  const heading = headings?.clients;
+
   return (
     <section className="border-t border-line py-16 lg:py-20 3xl:py-28">
       <Container>
         <SectionHeading
-          title="Our Valued Clients"
-          description="At Estatein, we have had the privilege of working with a diverse range of clients across various industries. Here are some of the clients we've had the pleasure of serving"
+          title={heading?.title ?? "Our Valued Clients"}
+          description={
+            heading?.description ??
+            "At Estatein, we have had the privilege of working with a diverse range of clients across various industries. Here are some of the clients we've had the pleasure of serving"
+          }
         />
 
         <div className="mt-12 grid gap-6 lg:grid-cols-2">
           {clients.map((client) => (
             <article
-              key={client.company}
+              key={client.id}
               className="flex flex-col rounded-2xl border border-line bg-surface p-6 lg:p-8"
             >
               {/* Header: since + company, with a Visit Website action */}
@@ -57,7 +44,7 @@ export function ValuedClients() {
                 <Button
                   variant="dark"
                   size="md"
-                  href="#"
+                  href={client.website_url ?? "#"}
                   aria-label={`Visit ${client.company} website`}
                   className="shrink-0 bg-bg"
                 >
@@ -98,7 +85,7 @@ export function ValuedClients() {
           ))}
         </div>
 
-        <SliderControls current={1} total={10} className="mt-12" />
+        <SliderControls current={1} total={clients.length} className="mt-12" />
       </Container>
     </section>
   );

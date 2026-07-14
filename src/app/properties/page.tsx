@@ -12,6 +12,8 @@ export const metadata: Metadata = {
     "Explore Estatein's curated selection of properties. Search, filter, and find the perfect home that resonates with your vision.",
 };
 
+export const revalidate = 60;
+
 export default function PropertiesPage() {
   return (
     <>

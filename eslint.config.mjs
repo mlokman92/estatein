@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // The CMS is a separate Vite app with its own tooling.
+    "cms/**",
   ]),
 ]);
 

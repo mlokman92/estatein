@@ -1,38 +1,15 @@
-import { ArrowUpRight, Mail, Phone, MapPin, Share2 } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Container } from "@/components/ui/Container";
+import { getContactCards } from "@/lib/queries";
+import { getSiteContent } from "@/lib/queries";
+import type { SimpleHero } from "@/lib/content";
+import { iconByName } from "@/lib/icons";
 
-const paragraph =
+const DEFAULT_PARAGRAPH =
   "Welcome to Estatein's Contact Us page. We're here to assist you with any inquiries, requests, or feedback you may have. Whether you're looking to buy or sell a property, explore investment opportunities, or simply want to connect, we're just a message away. Reach out to us, and let's start a conversation.";
 
-type SingleCard = {
-  kind: "single";
-  icon: LucideIcon;
-  label: string;
-  href: string;
-};
-type SocialCard = { kind: "social"; icon: LucideIcon; links: string[] };
-
-const cards: (SingleCard | SocialCard)[] = [
-  {
-    kind: "single",
-    icon: Mail,
-    label: "info@estatein.com",
-    href: "mailto:info@estatein.com",
-  },
-  {
-    kind: "single",
-    icon: Phone,
-    label: "+1 (123) 456-7890",
-    href: "tel:+11234567890",
-  },
-  { kind: "single", icon: MapPin, label: "Main Headquarters", href: "#" },
-  {
-    kind: "social",
-    icon: Share2,
-    links: ["Instagram", "LinkedIn", "Facebook"],
-  },
-];
+type SocialItem = { platform: string; url: string | null };
 
 function Badge({ icon: Icon }: { icon: LucideIcon }) {
   return (
@@ -45,7 +22,12 @@ function Badge({ icon: Icon }: { icon: LucideIcon }) {
   );
 }
 
-export function ContactHero() {
+export async function ContactHero() {
+  const [hero, cards] = await Promise.all([
+    getSiteContent<SimpleHero>("contact.hero"),
+    getContactCards(),
+  ]);
+
   return (
     <section className="relative overflow-hidden border-b border-line">
       <div
@@ -60,46 +42,47 @@ export function ContactHero() {
       <Container className="py-14 lg:py-16 3xl:py-24">
         <div className="max-w-4xl">
           <h1 className="text-[40px] font-semibold leading-[1.15] text-white sm:text-[44px] lg:text-5xl 3xl:text-6xl">
-            Get in Touch with Estatein
+            {hero?.heading ?? "Get in Touch with Estatein"}
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-[1.6] text-muted 3xl:text-lg">
-            {paragraph}
+            {hero?.paragraph ?? DEFAULT_PARAGRAPH}
           </p>
         </div>
 
         <div className="mt-10 grid grid-cols-2 gap-4 lg:grid-cols-4 3xl:mt-12">
-          {cards.map((card) =>
-            card.kind === "single" ? (
+          {cards.map((card) => {
+            const Icon = iconByName(card.icon);
+            return card.kind === "single" ? (
               <a
-                key={card.label}
-                href={card.href}
+                key={card.id}
+                href={card.href ?? "#"}
                 className="flex h-full flex-col gap-8 rounded-2xl border border-line bg-surface p-6 transition-colors hover:border-line-strong"
               >
-                <Badge icon={card.icon} />
+                <Badge icon={Icon} />
                 <p className="text-lg font-semibold text-white lg:text-xl">
                   {card.label}
                 </p>
               </a>
             ) : (
               <div
-                key="social"
+                key={card.id}
                 className="flex h-full flex-col gap-8 rounded-2xl border border-line bg-surface p-6"
               >
-                <Badge icon={card.icon} />
+                <Badge icon={Icon} />
                 <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-                  {card.links.map((name) => (
+                  {((card.links as SocialItem[]) ?? []).map((link) => (
                     <a
-                      key={name}
-                      href="#"
+                      key={link.platform}
+                      href={link.url ?? "#"}
                       className="text-lg font-semibold text-white transition-colors hover:text-purple-light lg:text-xl"
                     >
-                      {name}
+                      {link.platform}
                     </a>
                   ))}
                 </div>
               </div>
-            ),
-          )}
+            );
+          })}
         </div>
       </Container>
     </section>

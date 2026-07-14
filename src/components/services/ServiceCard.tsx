@@ -1,13 +1,14 @@
-import type { LucideIcon } from "lucide-react";
+import { iconByName } from "@/lib/icons";
 
 export type Service = {
-  icon: LucideIcon;
+  icon: string | null;
   title: string;
-  description: string;
+  description: string | null;
 };
 
 /** Service card: circular icon badge + title on one row, description below. */
-export function ServiceCard({ icon: Icon, title, description }: Service) {
+export function ServiceCard({ icon, title, description }: Service) {
+  const Icon = iconByName(icon);
   return (
     <article className="rounded-2xl border border-line bg-surface p-6 lg:p-7 3xl:p-8">
       <div className="flex items-center gap-4">

@@ -2,16 +2,13 @@ import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
+import { getSiteContent } from "@/lib/queries";
+import type { HomeHero } from "@/lib/content";
 
-const stats = [
-  { value: "200+", label: "Happy Customers" },
-  { value: "10k+", label: "Properties For Clients" },
-  { value: "16+", label: "Years of Experience" },
-] as const;
+export async function Hero() {
+  const hero = await getSiteContent<HomeHero>("home.hero");
+  if (!hero) return null;
 
-const badgeText = "DISCOVER YOUR DREAM PROPERTY • ";
-
-export function Hero() {
   return (
     <section className="relative overflow-hidden border-b border-line">
       {/* Faint grid + purple glow behind the whole hero */}
@@ -30,23 +27,24 @@ export function Hero() {
           <div className="flex w-full flex-col gap-10 lg:w-[55%] lg:gap-10 3xl:gap-[60px]">
             <div className="flex flex-col gap-6">
               <h1 className="text-[40px] font-semibold leading-[1.15] text-white sm:text-[44px] lg:text-5xl 3xl:text-6xl">
-                Discover Your Dream Property with Estatein
+                {hero.heading}
               </h1>
               <p className="max-w-xl text-base leading-[1.5] text-muted 3xl:text-lg">
-                Your journey to finding the perfect property begins here.
-                Explore our listings to find the home that matches your dreams.
+                {hero.subheading}
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-5">
-              <Button variant="outline">Learn More</Button>
-              <Button variant="primary" href="/properties">
-                Browse Properties
+              <Button variant="outline" href={hero.secondaryButtonHref ?? undefined}>
+                {hero.secondaryButtonLabel}
+              </Button>
+              <Button variant="primary" href={hero.primaryButtonHref ?? "/properties"}>
+                {hero.primaryButtonLabel}
               </Button>
             </div>
 
             <div className="grid grid-cols-3 gap-4">
-              {stats.map((stat) => (
+              {hero.stats.map((stat) => (
                 <div
                   key={stat.label}
                   className="rounded-xl border border-line bg-surface px-4 py-4 sm:px-6"
@@ -66,8 +64,8 @@ export function Hero() {
           <div className="relative w-full lg:w-[45%]">
             <div className="relative h-[420px] w-full overflow-hidden rounded-2xl lg:h-[560px]">
               <Image
-                src="/images/hero-building.jpg"
-                alt="Modern blue glass skyscraper"
+                src={hero.heroImage}
+                alt={hero.heroImageAlt}
                 fill
                 priority
                 sizes="(max-width: 1024px) 100vw, 45vw"
@@ -88,7 +86,7 @@ export function Hero() {
                   </defs>
                   <text className="fill-white text-[9px] font-semibold uppercase tracking-[0.18em]">
                     <textPath href="#hero-badge-circle" startOffset="0">
-                      {badgeText}
+                      {hero.badgeText}
                     </textPath>
                   </text>
                 </svg>

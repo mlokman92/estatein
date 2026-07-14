@@ -9,6 +9,8 @@ import { NavigatingExperience } from "@/components/about/NavigatingExperience";
 import { MeetTheTeam } from "@/components/about/MeetTheTeam";
 import { ValuedClients } from "@/components/about/ValuedClients";
 
+export const revalidate = 60;
+
 export const metadata: Metadata = {
   title: "About Us | Estatein",
   description:

@@ -5,45 +5,32 @@ import { Button } from "@/components/ui/Button";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Tag } from "@/components/ui/Tag";
 import { cn } from "@/lib/cn";
+import { getOfficeLocations, getSiteContent } from "@/lib/queries";
+import type { ContactSectionHeadings } from "@/lib/content";
 
-const tabs = ["All", "Regional", "International"];
+export async function OfficeLocations() {
+  const [offices, headings] = await Promise.all([
+    getOfficeLocations(),
+    getSiteContent<ContactSectionHeadings>("contact.section_headings"),
+  ]);
 
-const contactIcons: LucideIcon[] = [Mail, Phone, MapPin];
+  if (offices.length === 0) return null;
 
-type Office = {
-  label: string;
-  title: string;
-  description: string;
-  contacts: string[];
-  buttonLabel: string;
-};
+  const regions = Array.from(new Set(offices.map((o) => o.region)));
+  const tabs = [
+    "All",
+    ...regions.map((r) => r.charAt(0).toUpperCase() + r.slice(1)),
+  ];
 
-const offices: Office[] = [
-  {
-    label: "Main Headquarters",
-    title: "123 Estatein Plaza, City Center, Metropolis",
-    description:
-      "Our main headquarters serve as the heart of Estatein. Located in the bustling city center, this is where our core team of experts operates, driving the excellence and innovation that define us.",
-    contacts: ["info@estatein.com", "+1 (123) 456-7890", "Metropolis"],
-    buttonLabel: "Get Direction",
-  },
-  {
-    label: "Regional Offices",
-    title: "456 Urban Avenue, Downtown District, Metropolis",
-    description:
-      "Estatein's presence extends to multiple regions, each with its own dynamic real estate landscape. Discover our regional offices, staffed by local experts who understand the nuances of their respective markets.",
-    contacts: ["info@restatein.com", "+1 (123) 628-7890", "Metropolis"],
-    buttonLabel: "Get Direction",
-  },
-];
-
-export function OfficeLocations() {
   return (
     <section className="border-t border-line py-16 lg:py-20 3xl:py-28">
       <Container>
         <SectionHeading
-          title="Discover Our Office Locations"
-          description="Estatein is here to serve you across multiple locations. Whether you're looking to meet our team, discuss real estate opportunities, or simply drop by for a chat, we have offices conveniently located to serve your needs. Explore the categories below to find the Estatein office nearest to you"
+          title={headings?.offices.title ?? "Discover Our Office Locations"}
+          description={
+            headings?.offices.description ??
+            "Estatein is here to serve you across multiple locations. Whether you're looking to meet our team, discuss real estate opportunities, or simply drop by for a chat, we have offices conveniently located to serve your needs. Explore the categories below to find the Estatein office nearest to you"
+          }
         />
 
         {/* Region tabs (segmented control) */}
@@ -66,40 +53,45 @@ export function OfficeLocations() {
         </div>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
-          {offices.map((office) => (
-            <article
-              key={office.title}
-              className="flex flex-col rounded-2xl border border-line bg-surface p-6 lg:p-8"
-            >
-              <p className="text-base text-muted">{office.label}</p>
-              <h3 className="mt-2 text-2xl font-semibold text-white 3xl:text-[28px]">
-                {office.title}
-              </h3>
-              <p className="mt-4 text-base leading-relaxed text-muted">
-                {office.description}
-              </p>
+          {offices.map((office) => {
+            const contacts: { Icon: LucideIcon; value: string }[] = [
+              { Icon: Mail, value: office.email ?? "" },
+              { Icon: Phone, value: office.phone ?? "" },
+              { Icon: MapPin, value: office.city ?? "" },
+            ].filter((c) => c.value);
 
-              <div className="mt-6 flex flex-wrap gap-3">
-                {office.contacts.map((contact, i) => {
-                  const Icon = contactIcons[i];
-                  return (
-                    <Tag key={contact} icon={<Icon className="size-4" />}>
-                      {contact}
-                    </Tag>
-                  );
-                })}
-              </div>
-
-              <Button
-                variant="primary"
-                href="#"
-                aria-label={`Get direction to ${office.label}`}
-                className="mt-6 w-full"
+            return (
+              <article
+                key={office.id}
+                className="flex flex-col rounded-2xl border border-line bg-surface p-6 lg:p-8"
               >
-                {office.buttonLabel}
-              </Button>
-            </article>
-          ))}
+                <p className="text-base text-muted">{office.label}</p>
+                <h3 className="mt-2 text-2xl font-semibold text-white 3xl:text-[28px]">
+                  {office.title}
+                </h3>
+                <p className="mt-4 text-base leading-relaxed text-muted">
+                  {office.description}
+                </p>
+
+                <div className="mt-6 flex flex-wrap gap-3">
+                  {contacts.map(({ Icon, value }) => (
+                    <Tag key={value} icon={<Icon className="size-4" />}>
+                      {value}
+                    </Tag>
+                  ))}
+                </div>
+
+                <Button
+                  variant="primary"
+                  href={office.button_href ?? "#"}
+                  aria-label={`Get direction to ${office.label}`}
+                  className="mt-6 w-full"
+                >
+                  {office.button_label}
+                </Button>
+              </article>
+            );
+          })}
         </div>
       </Container>
     </section>

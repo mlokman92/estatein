@@ -1,40 +1,27 @@
-import { BarChart3, Flame, Lightbulb, Sun } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { SparkleCluster } from "@/components/ui/Sparkle";
-import { ServiceCard, type Service } from "./ServiceCard";
+import { ServiceCard } from "./ServiceCard";
+import { getInvestmentCards, getSiteContent } from "@/lib/queries";
+import type { InvestmentBlockContent } from "@/lib/content";
 
-const intro =
-  "Building a real estate portfolio requires a strategic approach. Estatein's Investment Advisory Service empowers you to make smart investments and informed decisions.";
+export async function InvestmentBlock() {
+  const [cards, content] = await Promise.all([
+    getInvestmentCards(),
+    getSiteContent<InvestmentBlockContent>("services.investment_block"),
+  ]);
 
-const cards: Service[] = [
-  {
-    icon: BarChart3,
-    title: "Market Insight",
-    description:
-      "Stay ahead of market trends with our expert Market Analysis. We provide in-depth insights into real estate market conditions",
-  },
-  {
-    icon: Flame,
-    title: "ROI Assessment",
-    description:
-      "Make investment decisions with confidence. Our ROI Assessment services evaluate the potential returns on your investments",
-  },
-  {
-    icon: Lightbulb,
-    title: "Customized Strategies",
-    description:
-      "Every investor is unique, and so are their goals. We develop Customized Investment Strategies tailored to your specific needs",
-  },
-  {
-    icon: Sun,
-    title: "Diversification Mastery",
-    description:
-      "Diversify your real estate portfolio effectively. Our experts guide you in spreading your investments across various property types and locations",
-  },
-];
+  const heading = content?.heading ?? "Smart Investments, Informed Decisions";
+  const intro =
+    content?.intro ??
+    "Building a real estate portfolio requires a strategic approach. Estatein's Investment Advisory Service empowers you to make smart investments and informed decisions.";
+  const ctaHeading = content?.ctaHeading ?? "Unlock Your Investment Potential";
+  const ctaParagraph =
+    content?.ctaParagraph ??
+    "Explore our Property Management Service categories and let us handle the complexities while you enjoy the benefits of property ownership.";
+  const ctaButtonLabel = content?.ctaButtonLabel ?? "Learn More";
+  const ctaButtonHref = content?.ctaButtonHref ?? "#";
 
-export function InvestmentBlock() {
   return (
     <section className="border-t border-line py-16 lg:py-20 3xl:py-28">
       <Container>
@@ -43,7 +30,7 @@ export function InvestmentBlock() {
           <div className="lg:col-span-1">
             <SparkleCluster className="mb-4" />
             <h2 className="text-[32px] font-semibold leading-[1.2] tracking-tight sm:text-[40px] 3xl:text-5xl">
-              Smart Investments, Informed Decisions
+              {heading}
             </h2>
             <p className="mt-4 text-base leading-relaxed text-muted sm:text-lg">
               {intro}
@@ -56,21 +43,19 @@ export function InvestmentBlock() {
               />
               <div className="relative">
                 <h3 className="text-xl font-semibold text-white lg:text-2xl">
-                  Unlock Your Investment Potential
+                  {ctaHeading}
                 </h3>
                 <p className="mt-3 text-base leading-relaxed text-muted">
-                  Explore our Property Management Service categories and let us
-                  handle the complexities while you enjoy the benefits of
-                  property ownership.
+                  {ctaParagraph}
                 </p>
                 <Button
                   variant="dark"
                   size="md"
-                  href="#"
+                  href={ctaButtonHref}
                   aria-label="Learn more about unlocking your investment potential"
                   className="mt-6 w-full bg-bg"
                 >
-                  Learn More
+                  {ctaButtonLabel}
                 </Button>
               </div>
             </article>
@@ -79,7 +64,12 @@ export function InvestmentBlock() {
           {/* Right — 2×2 grid of service cards */}
           <div className="grid gap-6 sm:grid-cols-2 lg:col-span-2">
             {cards.map((card) => (
-              <ServiceCard key={card.title} {...card} />
+              <ServiceCard
+                key={card.id}
+                icon={card.icon}
+                title={card.title}
+                description={card.description}
+              />
             ))}
           </div>
         </div>

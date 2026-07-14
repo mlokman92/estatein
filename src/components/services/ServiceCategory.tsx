@@ -1,13 +1,23 @@
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { ServiceCard, type Service } from "./ServiceCard";
+import { ServiceCard } from "./ServiceCard";
+
+type CategoryCard = {
+  id: string;
+  icon: string | null;
+  title: string;
+  description: string | null;
+};
 
 export type ServiceCategoryProps = {
   heading: string;
   paragraph: string;
-  cards: Service[];
-  featured: { heading: string; paragraph: string; buttonLabel: string };
+  cards: CategoryCard[];
+  featuredHeading: string;
+  featuredParagraph: string;
+  featuredButtonLabel: string;
+  featuredButtonHref: string;
 };
 
 /**
@@ -18,7 +28,10 @@ export function ServiceCategory({
   heading,
   paragraph,
   cards,
-  featured,
+  featuredHeading,
+  featuredParagraph,
+  featuredButtonLabel,
+  featuredButtonHref,
 }: ServiceCategoryProps) {
   return (
     <section className="border-t border-line py-16 lg:py-20 3xl:py-28">
@@ -27,7 +40,12 @@ export function ServiceCategory({
 
         <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {cards.map((card) => (
-            <ServiceCard key={card.title} {...card} />
+            <ServiceCard
+              key={card.id}
+              icon={card.icon}
+              title={card.title}
+              description={card.description}
+            />
           ))}
 
           {/* Wide featured CTA card — spans the remaining two columns */}
@@ -38,20 +56,20 @@ export function ServiceCategory({
             />
             <div className="relative flex flex-wrap items-start justify-between gap-4">
               <h3 className="max-w-md text-xl font-semibold text-white lg:text-2xl 3xl:text-[28px]">
-                {featured.heading}
+                {featuredHeading}
               </h3>
               <Button
                 variant="dark"
                 size="md"
-                href="#"
-                aria-label={`${featured.buttonLabel} about ${featured.heading}`}
+                href={featuredButtonHref}
+                aria-label={`${featuredButtonLabel} about ${featuredHeading}`}
                 className="bg-bg"
               >
-                {featured.buttonLabel}
+                {featuredButtonLabel}
               </Button>
             </div>
             <p className="relative mt-4 max-w-2xl text-base leading-relaxed text-muted">
-              {featured.paragraph}
+              {featuredParagraph}
             </p>
           </article>
         </div>

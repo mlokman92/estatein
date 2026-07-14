@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Urbanist } from "next/font/google";
+import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import "./globals.css";
 
 const urbanist = Urbanist({
@@ -30,6 +31,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${urbanist.variable} h-full`}>
       <body className="min-h-full bg-bg text-white antialiased">
+        <ScrollToTop />
         {children}
       </body>
     </html>

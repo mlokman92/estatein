@@ -1,8 +1,7 @@
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
-
-const description =
-  "Your dream property is just a click away. Whether you're looking for a new home, a strategic investment, or expert real estate advice, Estatein is here to assist you every step of the way. Take the first step towards your real estate goals and explore our available properties or get in touch with our team for personalized assistance.";
+import { getSiteContent } from "@/lib/queries";
+import type { CtaContent } from "@/lib/content";
 
 type MeshSquare = { x: number; y: number; size: number; opacity: number };
 
@@ -34,7 +33,11 @@ function cornerMesh(): MeshSquare[] {
 
 const mesh = cornerMesh();
 
-export function CTA() {
+export async function CTA() {
+  const cta = await getSiteContent<CtaContent>("global.cta");
+  const heading = cta?.heading ?? "Start Your Real Estate Journey Today";
+  const description = cta?.description ?? "";
+
   return (
     <section className="relative overflow-hidden border-y border-line bg-bg py-16 lg:py-20 3xl:py-[100px]">
       {/* Faint grid artwork */}
@@ -79,7 +82,7 @@ export function CTA() {
         <div className="flex flex-col items-start gap-8 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
           <div className="max-w-2xl">
             <h2 className="text-3xl font-semibold leading-[1.2] text-white sm:text-4xl 3xl:text-5xl">
-              Start Your Real Estate Journey Today
+              {heading}
             </h2>
             <p className="mt-3.5 text-base font-medium text-muted sm:text-lg">
               {description}
@@ -87,8 +90,8 @@ export function CTA() {
           </div>
 
           <div className="shrink-0">
-            <Button variant="primary" href="/properties">
-              Explore Properties
+            <Button variant="primary" href={cta?.buttonHref ?? "/properties"}>
+              {cta?.buttonLabel ?? "Explore Properties"}
             </Button>
           </div>
         </div>

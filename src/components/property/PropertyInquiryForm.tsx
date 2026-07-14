@@ -1,28 +1,64 @@
 "use client";
 
+import { useState } from "react";
+import type { FormEvent } from "react";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { SparkleCluster } from "@/components/ui/Sparkle";
-import {
-  FakeSelect,
-  fieldInputCls,
-  fieldLabelCls,
-  slug,
-} from "@/components/ui/form";
+import { fieldInputCls, fieldLabelCls } from "@/components/ui/form";
+import { submitPropertyInquiry } from "@/app/actions";
 
 const paragraph =
   "Interested in this property? Fill out the form below, and our real estate experts will get back to you with more details, including scheduling a viewing and answering any questions you may have.";
 
-const selectedProperty = "Seaside Serenity Villa, Malibu, California";
-
 const textFields = [
-  { label: "First Name", placeholder: "Enter First Name", type: "text", autoComplete: "given-name" },
-  { label: "Last Name", placeholder: "Enter Last Name", type: "text", autoComplete: "family-name" },
-  { label: "Email", placeholder: "Enter your Email", type: "email", autoComplete: "email" },
-  { label: "Phone", placeholder: "Enter Phone Number", type: "tel", autoComplete: "tel" },
+  { key: "first_name", label: "First Name", placeholder: "Enter First Name", type: "text", autoComplete: "given-name", required: true },
+  { key: "last_name", label: "Last Name", placeholder: "Enter Last Name", type: "text", autoComplete: "family-name", required: false },
+  { key: "email", label: "Email", placeholder: "Enter your Email", type: "email", autoComplete: "email", required: true },
+  { key: "phone", label: "Phone", placeholder: "Enter Phone Number", type: "tel", autoComplete: "tel", required: false },
 ] as const;
 
-export function PropertyInquiryForm() {
+const BLANK = { first_name: "", last_name: "", email: "", phone: "", message: "" };
+
+export function PropertyInquiryForm({
+  propertyId,
+  propertyName,
+  title,
+}: {
+  propertyId: string;
+  propertyName: string;
+  title: string;
+}) {
+  const [form, setForm] = useState(BLANK);
+  const [agreed, setAgreed] = useState(false);
+  const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">(
+    "idle",
+  );
+
+  const set = (key: keyof typeof BLANK, value: string) =>
+    setForm((prev) => ({ ...prev, [key]: value }));
+
+  async function onSubmit(e: FormEvent) {
+    e.preventDefault();
+    setStatus("loading");
+    const res = await submitPropertyInquiry({
+      property_id: propertyId,
+      first_name: form.first_name,
+      last_name: form.last_name,
+      email: form.email,
+      phone: form.phone,
+      message: form.message,
+      agreed_to_terms: agreed,
+    });
+    if (res.ok) {
+      setStatus("done");
+      setForm(BLANK);
+      setAgreed(false);
+    } else {
+      setStatus("error");
+    }
+  }
+
   return (
     <section className="border-t border-line py-16 lg:py-20 3xl:py-28">
       <Container>
@@ -30,8 +66,8 @@ export function PropertyInquiryForm() {
           {/* Intro */}
           <div>
             <SparkleCluster className="mb-4" />
-            <h2 className="text-[32px] font-semibold leading-[1.2] tracking-tight sm:text-[40px] 3xl:text-5xl">
-              Inquire About Seaside Serenity Villa
+            <h2 className="text-[32px] font-semibold leading-[1.2] tracking-tight text-white sm:text-[40px] 3xl:text-5xl">
+              Inquire About {title}
             </h2>
             <p className="mt-4 max-w-md text-base leading-relaxed text-muted sm:text-lg">
               {paragraph}
@@ -39,22 +75,22 @@ export function PropertyInquiryForm() {
           </div>
 
           {/* Form */}
-          <form
-            onSubmit={(e) => e.preventDefault()}
-            className="flex flex-col gap-6"
-          >
+          <form onSubmit={onSubmit} className="flex flex-col gap-6">
             <div className="grid gap-6 sm:grid-cols-2">
               {textFields.map((field) => (
-                <div key={field.label}>
-                  <label className={fieldLabelCls} htmlFor={slug(field.label)}>
+                <div key={field.key}>
+                  <label className={fieldLabelCls} htmlFor={field.key}>
                     {field.label}
                   </label>
                   <input
-                    id={slug(field.label)}
+                    id={field.key}
                     type={field.type}
                     autoComplete={field.autoComplete}
                     placeholder={field.placeholder}
                     className={fieldInputCls}
+                    required={field.required}
+                    value={form[field.key]}
+                    onChange={(e) => set(field.key, e.target.value)}
                   />
                 </div>
               ))}
@@ -62,11 +98,7 @@ export function PropertyInquiryForm() {
 
             <div>
               <span className={fieldLabelCls}>Selected Property</span>
-              <FakeSelect
-                label="Selected Property"
-                placeholder="Select Property"
-                value={selectedProperty}
-              />
+              <div className={`${fieldInputCls} text-white`}>{propertyName}</div>
             </div>
 
             <div>
@@ -78,6 +110,8 @@ export function PropertyInquiryForm() {
                 rows={5}
                 placeholder="Enter your Message here.."
                 className={`${fieldInputCls} resize-y`}
+                value={form.message}
+                onChange={(e) => set("message", e.target.value)}
               />
             </div>
 
@@ -86,6 +120,9 @@ export function PropertyInquiryForm() {
                 <input
                   type="checkbox"
                   className="size-5 shrink-0 accent-purple"
+                  checked={agreed}
+                  onChange={(e) => setAgreed(e.target.checked)}
+                  required
                 />
                 <span>
                   I agree with{" "}
@@ -103,10 +140,22 @@ export function PropertyInquiryForm() {
                 size="md"
                 type="submit"
                 className="shrink-0"
+                disabled={status === "loading"}
               >
                 Send Your Message
               </Button>
             </div>
+
+            {status === "done" && (
+              <p className="text-base text-purple-light">
+                Thanks — our team will be in touch shortly.
+              </p>
+            )}
+            {status === "error" && (
+              <p className="text-base text-red-400">
+                Something went wrong. Please try again.
+              </p>
+            )}
           </form>
         </div>
       </Container>

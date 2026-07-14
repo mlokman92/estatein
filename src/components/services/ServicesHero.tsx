@@ -1,6 +1,8 @@
 import { ArrowUpRight, Store, MonitorPlay, Building2, Sun } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Container } from "@/components/ui/Container";
+import { getSiteContent } from "@/lib/queries";
+import type { SimpleHero } from "@/lib/content";
 
 type Feature = { label: string; icon: LucideIcon };
 
@@ -11,10 +13,13 @@ const features: Feature[] = [
   { label: "Smart Investments, Informed Decisions", icon: Sun },
 ];
 
-const paragraph =
-  "Welcome to Estatein, where your real estate aspirations meet expert guidance. Explore our comprehensive range of services, each designed to cater to your unique needs and dreams.";
+export async function ServicesHero() {
+  const hero = await getSiteContent<SimpleHero>("services.hero");
+  const heading = hero?.heading ?? "Elevate Your Real Estate Experience";
+  const paragraph =
+    hero?.paragraph ??
+    "Welcome to Estatein, where your real estate aspirations meet expert guidance. Explore our comprehensive range of services, each designed to cater to your unique needs and dreams.";
 
-export function ServicesHero() {
   return (
     <section className="relative overflow-hidden border-b border-line">
       <div
@@ -29,7 +34,7 @@ export function ServicesHero() {
       <Container className="py-14 lg:py-16 3xl:py-24">
         <div className="max-w-4xl">
           <h1 className="text-[40px] font-semibold leading-[1.15] text-white sm:text-[44px] lg:text-5xl 3xl:text-6xl">
-            Elevate Your Real Estate Experience
+            {heading}
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-[1.6] text-muted 3xl:text-lg">
             {paragraph}
